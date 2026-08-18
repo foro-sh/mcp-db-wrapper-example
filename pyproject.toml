@@ -8,3 +8,9 @@ dependencies = [
     "foro",
     "pydantic>=2",
 ]
+
+# Application config, not deploy config - [tool.foro] is a closed allowlist
+# the platform validates (see platform:apps/api/src/services/manifest.ts) and
+# this key isn't on it. server.py reads this table itself.
+[tool.mcp-db-wrapper]
+database = "sqlite"

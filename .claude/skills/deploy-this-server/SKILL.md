@@ -64,16 +64,22 @@ never predict one.
 
 ## Constraints this server runs under
 
-- **The deployed filesystem is read-only, except `/tmp`.** Anything this server
-  writes has to live under `/tmp` or at a path given by the `DATABASE_URL`
-  secret. A relative SQLite path fails at import with
-  `sqlite3.OperationalError: unable to open database file`, and the container
-  dies before the health check.
-- **Deployed data does not survive a redeploy.** There are no volumes, so a
-  SQLite file under `/tmp` is scratch storage. Say so plainly rather than
-  letting the user believe a redeploy keeps their rows.
+- **The deployed filesystem is read-only, except `/tmp`.** `server.py` already
+  defaults its SQLite file to `/tmp/db.sqlite3` for this reason. Anything
+  *else* you make it write, a cache, an export, a log file, has the same
+  constraint: a relative path fails with
+  `sqlite3.OperationalError: unable to open database file` or its equivalent,
+  and the container dies before the health check.
+- **Deployed data does not survive a redeploy.** There are no volumes, so
+  `/tmp` is scratch storage. Say so plainly rather than letting the user
+  believe a redeploy keeps their rows.
 - **Secrets are set in the dashboard**, Secrets tab, never committed. The code
   reads them with `foro.secret("NAME")` or `os.environ`.
+- **The database type lives in `[tool.mcp-db-wrapper]` in `pyproject.toml`**,
+  and `server.py` refuses to boot when `DATABASE_URL` disagrees with it. Switch
+  database by editing that key and adding the driver, not by setting a
+  different URL. Never move application config into `[tool.foro]`: that table
+  is foro.sh's own closed allowlist and an unknown key fails the deploy.
 - **This repo ships no `uv.lock`**, so foro.sh installs unlocked. Adding one
   makes builds reproducible and switches the platform to a frozen install, so
   from then on a lockfile that drifts from `pyproject.toml` fails the build

@@ -9,6 +9,15 @@ read and write it.
 > skills your agent needs in `.claude/skills/`: how to deploy this server, and
 > how to add tools that are worth what they cost a model to carry.
 
+## Before you deploy
+
+Without any setup, this runs on a local SQLite file that's wiped on every
+restart and redeploy - fine for trying it out, not for data you care about.
+
+To keep data around, set **`DATABASE_URL`** as a secret in your project's
+**Secrets** tab (a `sqlite:///` URL pointing at a file on a volume you
+control). For a different kind of database entirely, see Storage below.
+
 ## Tools
 
 | Tool | What it does |
@@ -33,16 +42,23 @@ code.
 
 ## Storage
 
-By default this runs on a local SQLite file (`db.sqlite3`) that's created
-automatically — no setup required. It resets whenever the server restarts or
-redeploys, which is fine for trying things out but not for data you care
-about.
+The database type is declared in `pyproject.toml`:
 
-To use a different SQLite file — for example one on a persistent volume you
-mount yourself — set the `DATABASE_URL` environment variable (as a secret in
-your foro.sh project) to its path. For a different kind of database
-entirely (e.g. Postgres), ask your coding agent to swap in the matching
-driver.
+```toml
+[tool.mcp-db-wrapper]
+database = "sqlite"
+```
+
+`server.py` reads this and refuses to boot if `DATABASE_URL` doesn't match it
+(e.g. a non-`sqlite:///` URL while `database = "sqlite"`), since the type is
+config, not something inferred from whatever URL happens to be set.
+
+By default, with no `DATABASE_URL` secret, this runs on `/tmp/db.sqlite3`,
+created automatically, no setup required, and **wiped on every restart and
+redeploy** (the platform mounts no persistent volumes). Set `DATABASE_URL` to
+a `sqlite:///` path on a volume you control to keep data around. For a
+different kind of database entirely (e.g. Postgres), ask your coding agent to
+swap in the matching driver and update `database` above to match.
 
 ## Run it locally
 

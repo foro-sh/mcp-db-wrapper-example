@@ -8,11 +8,52 @@ request. State lives in a local SQLite file, which is ephemeral — see README.
 import os
 import re
 import sqlite3
+import tomllib
+from pathlib import Path
 from typing import Annotated, Any
 
 import foro
 from fastmcp import FastMCP
 from pydantic import Field
+
+# [tool.mcp-db-wrapper] in pyproject.toml, not [tool.foro] - that table is
+# foro.sh's own closed allowlist (see platform:apps/api/src/services/manifest.ts),
+# this is application config the platform never looks at.
+_CONFIG = tomllib.loads(Path(__file__).with_name("pyproject.toml").read_text())
+DATABASE_TYPE = _CONFIG.get("tool", {}).get("mcp-db-wrapper", {}).get("database", "sqlite")
+
+_SQLITE_URL_PREFIX = "sqlite:///"
+_EPHEMERAL_DB_PATH = "/tmp/db.sqlite3"  # deployed containers run a read-only rootfs; /tmp is the one writable path
+
+
+def _resolve_db_path() -> tuple[str, bool]:
+    """The sqlite file to open, and whether it's the ephemeral default.
+
+    Never infers the database type from DATABASE_URL - it must agree with
+    the type declared in pyproject.toml, so swapping databases is a config
+    edit plus a driver, not a URL scheme an agent has to know matters.
+    """
+    if DATABASE_TYPE != "sqlite":
+        raise RuntimeError(
+            f"[tool.mcp-db-wrapper].database is {DATABASE_TYPE!r}, but this "
+            "starter only ships a sqlite driver. Ask your coding agent to "
+            "add one for it (see README's Storage section)."
+        )
+
+    url = os.environ.get("DATABASE_URL")
+    if url is None:
+        return _EPHEMERAL_DB_PATH, True
+    if not url.startswith(_SQLITE_URL_PREFIX):
+        raise RuntimeError(
+            f"DATABASE_URL is set but isn't a {_SQLITE_URL_PREFIX!r} URL, which is "
+            f"what [tool.mcp-db-wrapper].database = {DATABASE_TYPE!r} expects. Fix the "
+            "secret in your project's Secrets tab, or update the declared "
+            "database type to match."
+        )
+    return url.removeprefix(_SQLITE_URL_PREFIX), False
+
+
+DB_PATH, _USING_EPHEMERAL_DB = _resolve_db_path()
 
 mcp = FastMCP(
     "mcp-db-wrapper-example",
@@ -20,14 +61,16 @@ mcp = FastMCP(
         "A SQL database this server owns. Use list_tables to see what's "
         "there, query to read (SELECT only), insert to write. Ships with a "
         "demo `notes` table — ask the user what tables and tools they "
-        "actually need and add those."
+        "actually need and add those. "
+        + (
+            "No DATABASE_URL secret is set, so this is running on scratch "
+            "storage that's wiped on every restart and redeploy - tell the "
+            "user before they rely on anything written here."
+            if _USING_EPHEMERAL_DB
+            else "Backed by the DATABASE_URL secret."
+        )
     ),
 )
-
-# DATABASE_URL lets a deployer point this at a SQLite file on a volume they
-# control instead of the default ephemeral one — see README's Storage
-# section. Not a general connection string: this stays SQLite-only by design.
-DB_PATH = os.environ.get("DATABASE_URL", "db.sqlite3").removeprefix("sqlite:///")
 
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
