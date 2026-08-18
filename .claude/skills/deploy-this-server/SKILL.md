@@ -62,9 +62,9 @@ Read the real slug off the dashboard. It is randomly generated
 (`adjective-noun-4char`) and immutable, never derived from the project name, so
 never predict one.
 
-## What this repo specifically gets wrong
+## Constraints this server runs under
 
-- **The deployed filesystem is read only, except `/tmp`.** Anything this server
+- **The deployed filesystem is read-only, except `/tmp`.** Anything this server
   writes has to live under `/tmp` or at a path given by the `DATABASE_URL`
   secret. A relative SQLite path fails at import with
   `sqlite3.OperationalError: unable to open database file`, and the container
