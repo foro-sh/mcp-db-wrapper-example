@@ -11,6 +11,7 @@ import sqlite3
 import tomllib
 from pathlib import Path
 from typing import Annotated, Any
+from urllib.parse import quote
 
 import foro
 from fastmcp import FastMCP
@@ -75,8 +76,13 @@ mcp = FastMCP(
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def _connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+def _connect(readonly: bool = False) -> sqlite3.Connection:
+    # SQLite itself enforces read-only, via the `mode=ro` URI. That is what
+    # makes `query` safe, rather than inspecting the SQL for a SELECT: a
+    # keyword check rejects perfectly good `WITH ... SELECT` queries and has to
+    # keep pace with every other statement form to be worth anything.
+    dsn = f"file:{quote(DB_PATH)}?mode=ro" if readonly else DB_PATH
+    conn = sqlite3.connect(dsn, uri=readonly)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -121,10 +127,13 @@ def list_tables() -> list[str]:
 @mcp.tool()
 def query(sql: SqlQuery, params: list[Any] | None = None) -> list[dict[str, Any]]:
     """Run a read-only SQL query (SELECT only) and return the matching rows."""
-    if not sql.strip().upper().startswith("SELECT"):
-        raise ValueError("query only runs SELECT statements — use insert to write")
-    with _connect() as conn:
-        rows = conn.execute(sql, params or []).fetchall()
+    with _connect(readonly=True) as conn:
+        try:
+            rows = conn.execute(sql, params or []).fetchall()
+        except sqlite3.OperationalError as err:
+            if "readonly" in str(err):
+                raise ValueError("query only reads. Use insert to write.") from err
+            raise
     return [dict(row) for row in rows]
 
 
