@@ -10,6 +10,7 @@ import re
 import sqlite3
 from typing import Annotated, Any
 
+import foro
 from fastmcp import FastMCP
 from pydantic import Field
 
@@ -102,12 +103,4 @@ def insert(table: TableName, values: RowValues) -> int:
 
 
 if __name__ == "__main__":
-    mcp.run(
-        transport="http",
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", "8000")),
-        # Behind foro.sh's reverse proxy, requests arrive with the public
-        # hostname — FastMCP's DNS-rebinding Host check would reject them.
-        # Access control is the platform's bearer token instead.
-        host_origin_protection=False,
-    )
+    foro.run(mcp)
