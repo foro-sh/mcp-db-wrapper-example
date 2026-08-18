@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "foro@foro": true
+  },
+  "extraKnownMarketplaces": {
+    "foro": {
+      "source": {
+        "source": "github",
+        "repo": "foro-sh/foro"
+      }
+    }
+  }
+}
