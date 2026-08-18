@@ -5,6 +5,12 @@ small SQL database. It comes with one demo table (`notes`) so there's
 something to query straight away, and tools your AI coding agent can use to
 read and write it.
 
+> **Opening this in Claude Code?** Nothing to install. The repo ships the
+> skills your agent needs in `.claude/skills/`: how to deploy this server and
+> how to add tools worth their token cost. Claude Code will ask once whether to
+> connect the foro.sh docs (`.mcp.json`) so those skills can look things up
+> live. Say yes.
+
 ## Tools
 
 | Tool | What it does |
