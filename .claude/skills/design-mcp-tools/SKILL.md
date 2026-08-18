@@ -17,7 +17,7 @@ every message in the conversation, including the ones that use none of them.
 That second cost is invisible while you write the server and permanent once
 it's deployed. Design against it up front.
 
-`foro-docs.read_doc("tokens")` has the full economics — how both figures are
+https://foro.sh/docs/tokens has the full economics — how both figures are
 counted, which tokenizer, and why they're a ruler rather than an invoice. Read
 it if the user wants the numbers justified. This skill is the procedure.
 

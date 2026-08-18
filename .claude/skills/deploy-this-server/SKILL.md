@@ -5,10 +5,14 @@ description: Ship a change to this MCP server and confirm it is really live on f
 
 # Deploy this server to foro.sh
 
-This repo is already a foro.sh project: it was created from the template
-gallery, so foro.sh built it once already and it has a live
-`https://<slug>.foro.sh` URL. Shipping a change is push plus redeploy, not
-project setup. Never scaffold a second project for it.
+Created from the foro.sh template gallery, this repo is already a foro.sh
+project: the platform built it once and it has a live `https://<slug>.foro.sh`
+URL. Shipping a change is push plus redeploy, not project setup, so never
+scaffold a second project or a second repo for it.
+
+If the dashboard shows no project for this repo, it was cloned rather than
+created from the gallery. Then it is an ordinary new project: create it in the
+dashboard against this repo, and the rest of this skill applies unchanged.
 
 ## 1. Prove it locally before pushing
 
@@ -70,6 +74,10 @@ never predict one.
   letting the user believe a redeploy keeps their rows.
 - **Secrets are set in the dashboard**, Secrets tab, never committed. The code
   reads them with `foro.secret("NAME")` or `os.environ`.
+- **This repo ships no `uv.lock`**, so foro.sh installs unlocked. Adding one
+  makes builds reproducible and switches the platform to a frozen install, so
+  from then on a lockfile that drifts from `pyproject.toml` fails the build
+  outright. If you add a dependency after that, run `uv lock` and commit it.
 
 ## When a deploy fails
 
@@ -85,9 +93,9 @@ session:
 Most failures reproduce locally with `uvx foro dev` in seconds instead of as a
 60 second cloud health check timeout.
 
-`foro-docs.read_doc("logs")` and `foro-docs.read_doc("secrets")` have the
-current detail. Use `foro-docs.list_docs()` for the other slugs. If the docs MCP
-server is not connected, say what you are unsure about instead of guessing.
+https://foro.sh/docs/logs and https://foro.sh/docs/secrets have the current
+detail, and https://foro.sh/docs indexes the rest. Read the page rather than
+recalling it: this file ships with the repo, so it ages, and the docs do not.
 
 ## Done when
 

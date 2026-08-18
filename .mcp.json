@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "foro-docs": {
-      "type": "http",
-      "url": "https://cosmic-canyon-7ilj.foro.sh/mcp"
-    }
-  }
-}
