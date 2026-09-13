@@ -1,0 +1,35 @@
+name: Skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Skills match foro-sh/foro
+    # Only in the template itself. In a repo created from it the skills belong
+    # to its owner, who is free to edit them. deploy-this-server is specific to
+    # this repo and has no canonical copy, so it isn't checked.
+    if: github.repository == 'foro-sh/mcp-db-wrapper-example'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compare with the canonical skills
+        run: |
+          git clone --quiet --depth 1 https://github.com/foro-sh/foro.git "$RUNNER_TEMP/foro"
+          status=0
+          for skill in design-mcp-tools; do
+            if ! diff -r "$RUNNER_TEMP/foro/plugins/claude-code/skills/$skill" ".claude/skills/$skill"; then
+              echo "::error file=.claude/skills/$skill/SKILL.md::$skill differs from foro-sh/foro. Copy plugins/claude-code/skills/$skill from its main branch."
+              status=1
+            fi
+          done
+          exit $status
