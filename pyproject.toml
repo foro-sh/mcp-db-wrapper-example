@@ -4,9 +4,9 @@ version = "0.1.0"
 description = "A small SQL database your MCP tools can query and write to — the foro.sh database starter"
 requires-python = ">=3.12"
 dependencies = [
-    "fastmcp>=3.4",
-    "foro",
-    "pydantic>=2",
+    "fastmcp>=4.1.6",
+    "foro>=0.19.0",
+    "pydantic>=2.14.3",
 ]
 
 # Application config, not deploy config - [tool.foro] is a closed allowlist
